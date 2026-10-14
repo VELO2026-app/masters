@@ -1,0 +1,227 @@
+/* VELΘ design tokens — extracted from velo-masters-landing/src/app/globals.css */
+:root {
+  /* Brand surfaces */
+  --soft: oklch(0.967 0.013 75);
+  --soft-warm: oklch(0.955 0.019 60);
+  --deep: oklch(0.42 0.04 255);
+  --deep-foreground: oklch(0.967 0.013 75);
+
+  /* Accents */
+  --amber: oklch(0.68 0.13 60);
+  --amber-soft: oklch(0.88 0.09 75);
+  --teal: oklch(0.63 0.09 200);
+  --teal-soft: oklch(0.88 0.05 200);
+  --rose: oklch(0.75 0.12 15);
+  --wine: oklch(0.45 0.14 15);
+  --lavender: oklch(0.78 0.03 275);
+  --ice: oklch(0.94 0.012 230);
+
+  /* Type pairing — rebalanced: editorial serif (Cormorant Garamond) + warm humanist sans (Manrope) + monospace eyebrow (JetBrains Mono).
+     Cormorant has more sacred / ecclesiastical character than Fraunces while staying readable. */
+  --font-display: "Cormorant Garamond", "Times New Roman", serif;
+  --font-sans: "Manrope", -apple-system, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  --bg: var(--soft);
+  --fg: var(--deep);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--soft);
+  color: var(--deep);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+p, li { font-weight: 300; letter-spacing: 0.005em; }
+
+/* ─── shared utilities used by every artboard ─────────────────────── */
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--deep) 65%, transparent);
+}
+.eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: color-mix(in oklch, var(--deep) 35%, transparent);
+}
+
+.eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid color-mix(in oklch, var(--deep) 18%, transparent);
+  background: color-mix(in oklch, white 50%, transparent);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--deep) 80%, transparent);
+  backdrop-filter: blur(8px);
+}
+.eyebrow-pill .dot {
+  width: 6px; height: 6px; border-radius: 999px; background: var(--amber);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  line-height: 1.0;
+  color: var(--deep);
+}
+.display em {
+  font-style: italic;
+  font-weight: 300;
+  color: color-mix(in oklch, var(--deep) 80%, transparent);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 200ms ease, background 200ms ease, border-color 200ms ease;
+}
+.btn-primary {
+  background: var(--deep);
+  color: var(--deep-foreground);
+  border: 1px solid var(--deep);
+}
+.btn-primary:hover { transform: translateY(-1px); background: color-mix(in oklch, var(--deep) 90%, black); }
+.btn-ghost {
+  background: transparent;
+  color: var(--deep);
+  border: 1px solid color-mix(in oklch, var(--deep) 25%, transparent);
+}
+.btn-ghost:hover { border-color: color-mix(in oklch, var(--deep) 45%, transparent); }
+.btn .dot {
+  width: 6px; height: 6px; border-radius: 999px; background: var(--amber);
+}
+
+/* glass card — softer than current */
+.glass {
+  background: color-mix(in oklch, white 70%, transparent);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border: 1px solid color-mix(in oklch, var(--deep) 7%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in oklch, white 80%, transparent) inset,
+    0 18px 40px -22px color-mix(in oklch, var(--deep) 18%, transparent);
+}
+
+/* aura — radial soft glow, three colors */
+.aura {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 40% at 50% 45%,
+      color-mix(in oklch, var(--amber-soft) 55%, transparent) 0%,
+      color-mix(in oklch, var(--amber-soft) 18%, transparent) 35%,
+      transparent 70%),
+    radial-gradient(60% 50% at 80% 80%,
+      color-mix(in oklch, var(--rose) 14%, transparent) 0%,
+      transparent 60%),
+    radial-gradient(50% 60% at 15% 85%,
+      color-mix(in oklch, var(--teal-soft) 16%, transparent) 0%,
+      transparent 60%);
+}
+
+/* film grain — subtle */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyMjAnIGhlaWdodD0nMjIwJz48ZmlsdGVyIGlkPSduJz48ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC44NScgbnVtT2N0YXZlcz0nMicgc3RpdGNoVGlsZXM9J3N0aXRjaCcvPjxmZUNvbG9yTWF0cml4IHZhbHVlcz0nMCAwIDAgMCAwICAwIDAgMCAwIDAgIDAgMCAwIDAgMCAgMCAwIDAgMC41NSAwJy8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9JzEwMCUnIGhlaWdodD0nMTAwJScgZmlsdGVyPSd1cmwoI24pJy8+PC9zdmc+");
+}
+
+/* artboard surface */
+.surface {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--soft);
+  overflow: hidden;
+  isolation: isolate;
+}
+.surface.deep { background: var(--deep); color: var(--deep-foreground); }
+.surface.warm { background: var(--soft-warm); }
+
+/* nav */
+.velo-nav {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 36px;
+  z-index: 10;
+}
+.velo-mark {
+  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+  font-weight: 500;
+  font-size: inherit;
+  letter-spacing: -0.01em;
+  color: inherit;
+  font-style: normal;
+  font-variation-settings: "opsz" 24;
+}
+.velo-mark .theta {
+  font-weight: 300;
+  letter-spacing: 0;
+  margin-left: 0.02em;
+}
+.velo-nav .velo-mark {
+  font-size: 22px;
+  color: var(--deep);
+}
+.surface.deep .velo-nav .velo-mark { color: var(--deep-foreground); }
+
+/* small dot accents */
+.dot-accent {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: var(--amber);
+}
+
+/* sigil — sacred geometry circle marker */
+.sigil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--deep) 25%, transparent);
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--deep);
+  background: color-mix(in oklch, white 40%, transparent);
+}

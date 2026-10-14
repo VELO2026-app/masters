@@ -1,0 +1,11 @@
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Serve .jsx as JavaScript so Babel can fetch and parse them.
+# Some hosts default .jsx to application/octet-stream which silently
+# breaks the page.
+/*.jsx
+  Content-Type: text/javascript; charset=utf-8
+
+/artboards/*.jsx
+  Content-Type: text/javascript; charset=utf-8

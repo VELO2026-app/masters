@@ -1,0 +1,12 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*.jsx"
+  [headers.values]
+    Content-Type = "text/javascript; charset=utf-8"
+
+[[headers]]
+  for = "/artboards/*.jsx"
+  [headers.values]
+    Content-Type = "text/javascript; charset=utf-8"

@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VELΘ Masters</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;500;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles/velo-tokens.css" />
+
+  <style>
+    html, body { margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--soft);
+      font-family: var(--font-sans);
+      color: var(--deep);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* Page-wide sacred mandala — fixed layer behind everything,
+       seamlessly extends across all sections so there's no visible
+       crop/edge of the image. */
+    .page-mandala {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: url("icons/velo-logo.png");
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: min(1400px, 110vw) auto;
+      background-attachment: fixed;
+      opacity: 0.18;
+      mix-blend-mode: multiply;
+      filter: saturate(0.85);
+      /* Soft fade to background at edges so it never reads as a hard
+         rectangle — vignette mask. */
+      -webkit-mask-image: radial-gradient(
+        ellipse 70% 65% at 50% 50%,
+        black 0%,
+        black 45%,
+        transparent 90%
+      );
+              mask-image: radial-gradient(
+        ellipse 70% 65% at 50% 50%,
+        black 0%,
+        black 45%,
+        transparent 90%
+      );
+    }
+    /* Make sure all content sits above the mandala */
+    .web-section { position: relative; z-index: 1; }
+    /* Surfaces are transparent so the page-wide mandala shows through.
+       The body keeps the soft background color. */
+    .web-section > .surface { background: transparent; }
+    /* Deep variant still wants its dark background */
+    .web-section.web-deep > .surface { background: var(--deep); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       Override the artboard `.surface` rule so that, when a section is
+       wrapped in `.web-section`, it flows naturally instead of being
+       locked to its parent's height. Hero keeps full viewport height.
+       ───────────────────────────────────────────────────────────────── */
+    .web-section { position: relative; }
+    .web-section > .surface {
+      width: 100%;
+      height: auto;
+      min-height: auto;
+      overflow: visible;
+    }
+    /* Hero is the one section that should still fill the viewport */
+    .web-hero > .surface {
+      height: 100vh;
+      height: 100svh; /* iOS: без скачков адресной строки */
+      min-height: 720px; /* don't collapse on short windows */
+    }
+
+    /* Ecosystem uses absolute % positioning that needs an explicit
+       container height to expand against. Lock it to the artboard's
+       intended canvas height. */
+    #ecosystem-desktop > .surface {
+      height: 1340px;
+    }
+    #ecosystem-desktop > .surface > div {
+      height: 100%;
+    }
+
+    /* Invitation: cap headline so it doesn't overlap body copy when
+       the viewport is wide and clamp() resolves to its max. */
+    #invitation > .surface h2,
+    #invitation > .surface .display {
+      font-size: clamp(48px, 5.4vw, 88px) !important;
+      line-height: 1.02 !important;
+    }
+
+    /* Page-level rhythm: subtle separators between sections */
+    .web-section + .web-section > .surface::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: min(1200px, 88%);
+      height: 1px;
+      background: color-mix(in oklch, var(--deep) 10%, transparent);
+    }
+    /* Don't draw separator above .deep sections — looks too harsh */
+    .web-section + .web-section.web-deep > .surface::before { display: none; }
+
+    /* Scroll-margin so anchor links land below sticky nav (if any) */
+    .web-section { scroll-margin-top: 24px; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       RESPONSIVE — десктоп (>1024px) не трогаем, только scoped-оверрайды.
+       Брейкпоинты:
+         ≤ 1024px  планшет — мягче боковые отступы
+         ≤ 900px   экосистема — свап орбитальной карты на mobile pan/zoom
+         ≤ 820px   процесс-«река» — вертикальный список шагов
+         ≤ 700px   телефон — одна колонка, типографика, full-width CTA
+       ───────────────────────────────────────────────────────────────── */
+
+    /* — Планшет — */
+    @media (max-width: 1024px) {
+      .web-section:not(.web-hero) > .surface { padding: 72px 40px !important; }
+      .web-hero .hero-content { padding: 0 40px !important; }
+    }
+
+    /* — Экосистема: орбитальная карта требует ширины — ниже 900px
+       показываем pan/zoom-версию — */
+    @media (max-width: 900px) {
+      #ecosystem-desktop { display: none; }
+      #ecosystem-mobile > .surface { padding: 64px 22px !important; }
+    }
+    @media (min-width: 901px) {
+      #ecosystem-mobile { display: none; }
+    }
+
+    /* — Процесс-«река»: absolute-схема → вертикальный список — */
+    @media (max-width: 820px) {
+      .river-canvas { aspect-ratio: auto !important; }
+      .river-svg { display: none; }
+      .river-nodes {
+        position: static !important;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+      .river-node {
+        position: static !important;
+        transform: none !important;
+        display: flex;
+        gap: 18px;
+        align-items: flex-start;
+      }
+      .river-node .sigil { flex-shrink: 0; }
+      .river-label {
+        position: static !important;
+        transform: none !important;
+        width: auto !important;
+        text-align: left !important;
+        pointer-events: auto !important;
+      }
+      .river-label p { margin-inline: 0 !important; max-width: 40ch !important; }
+    }
+
+    /* — Телефон — */
+    @media (max-width: 700px) {
+      /* Nav */
+      .velo-nav { padding: 14px 18px !important; }
+      .velo-nav img { height: 22px !important; }
+      .velo-nav .btn { padding: 10px 16px; font-size: 12px; }
+
+      /* Hero — растёт по контенту, но не меньше экрана */
+      .web-hero > .surface {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100svh;
+      }
+      .web-hero .hero-content {
+        height: auto !important;
+        min-height: 100vh;
+        min-height: 100svh;
+        padding: 96px 22px 56px !important;
+      }
+      .web-hero .display,
+      .web-hero h1.display {
+        font-size: clamp(34px, 10.5vw, 44px) !important;
+        line-height: 1.05 !important;
+        max-width: none !important;
+      }
+      .web-hero p {
+        font-size: 16px !important;
+        line-height: 1.55 !important;
+      }
+      .web-hero .hero-sigil-svg {
+        width: 120vw !important;
+        height: 120vw !important;
+        opacity: 0.28 !important;
+      }
+      .web-hero .hero-content .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 15px 18px !important;
+      }
+      .web-hero .hero-content > div[style*="gap"] {
+        flex-direction: column !important;
+        width: 100%;
+        max-width: 360px;
+      }
+
+      /* Все секции кроме hero */
+      .web-section:not(.web-hero) > .surface { padding: 64px 20px !important; }
+      .web-section:not(.web-hero) .display,
+      .web-section:not(.web-hero) h2.display {
+        font-size: clamp(30px, 8.6vw, 40px) !important;
+        line-height: 1.1 !important;
+        max-width: none !important;
+      }
+      .web-section:not(.web-hero) p { font-size: 15px !important; }
+
+      /* Любые inline-гриды → одна колонка */
+      .web-section:not(.web-hero) [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+      }
+      #faq [style*="grid-template-columns"],
+      #process [style*="grid-template-columns"] { gap: 40px !important; }
+      .web-section:not(.web-hero) [style*="flex-wrap"] {
+        flex-wrap: wrap !important;
+      }
+
+      /* Benefits: карточки компактнее, заголовок с вордмарком — без разрыва */
+      #benefits article { padding: 26px 20px !important; }
+      #benefits h2.display { gap: 12px !important; }
+      #benefits article h3 { font-size: 22px !important; }
+
+      /* Pilgrimage / Constellation */
+      .trail-svg { display: none; }
+      .trail-card { width: 100% !important; align-self: stretch !important; }
+      .const-lines { display: none; }
+      .const-station { padding-top: 0 !important; }
+
+      /* Invitation */
+      #invitation > .surface h2,
+      #invitation > .surface .display {
+        font-size: clamp(34px, 9.6vw, 44px) !important;
+      }
+      #invitation .btn {
+        width: 100%;
+        max-width: 360px;
+        justify-content: center;
+      }
+
+      /* Footer */
+      footer.web-section > .surface { padding: 44px 20px 32px !important; }
+      footer.web-section [style*="justify-content: space-between"] {
+        flex-direction: column;
+        align-items: flex-start !important;
+      }
+
+      /* Мандала: fixed-attachment глючит в iOS Safari, а элемент
+         и так position:fixed — визуально идентично */
+      .page-mandala {
+        background-attachment: scroll;
+        background-size: 150vw auto;
+      }
+
+      /* Комета: компактнее голова, панель не шире вьюпорта */
+      .page-comet-trail span:first-child { font-size: 22px !important; }
+      button[aria-label="Поймать комету"] { width: 48px !important; height: 48px !important; }
+      [role="dialog"][aria-label="Связаться с фаундером"] {
+        width: min(320px, calc(100vw - 40px)) !important;
+      }
+    }
+
+    /* Comet catch panel animations */
+    @keyframes comet-fade {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes comet-rise {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+  </style>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <template id="__bundler_thumbnail">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="42%" r="65%">
+          <stop offset="0%" stop-color="#f4ead8" />
+          <stop offset="60%" stop-color="#ecdcc0" />
+          <stop offset="100%" stop-color="#d6c5a3" />
+        </radialGradient>
+        <radialGradient id="aura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#d99757" stop-opacity="0.45" />
+          <stop offset="100%" stop-color="#d99757" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="600" height="600" fill="url(#bg)" />
+      <circle cx="300" cy="300" r="240" fill="url(#aura)" />
+      <g fill="none" stroke="#3a2f25" stroke-opacity="0.55" stroke-width="1.2">
+        <circle cx="300" cy="300" r="80" />
+        <circle cx="300" cy="220" r="80" />
+        <circle cx="369" cy="260" r="80" />
+        <circle cx="369" cy="340" r="80" />
+        <circle cx="300" cy="380" r="80" />
+        <circle cx="231" cy="340" r="80" />
+        <circle cx="231" cy="260" r="80" />
+      </g>
+      <text x="300" y="322" text-anchor="middle"
+            font-family="Georgia, 'Times New Roman', serif"
+            font-size="84" font-weight="300" fill="#2a221b" letter-spacing="-2">
+        VEL<tspan font-style="italic" font-weight="400">Θ</tspan>
+      </text>
+      <text x="300" y="380" text-anchor="middle"
+            font-family="ui-monospace, Menlo, monospace"
+            font-size="14" fill="#6b5a47" letter-spacing="6">
+        MASTERS
+      </text>
+    </svg>
+  </template>
+  <div id="root"></div>
+  <div class="page-mandala" aria-hidden="true"></div>
+
+  <!-- Component sources (same as the variants canvas, minus design-canvas) -->
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="artboards/hero.jsx"></script>
+  <script type="text/babel" src="artboards/process.jsx"></script>
+  <script type="text/babel" src="artboards/sections.jsx"></script>
+  <script type="text/babel" src="artboards/ecosystem.jsx"></script>
+  <script type="text/babel" src="artboards/ecosystem-mobile.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ─────────────────────────────────────────────────────────────────
+    // PageComet — sacred comet that drifts across the entire page.
+    // Lives in a fixed-position layer above the page so it stays in
+    // the viewport while the user scrolls, and its trajectory is biased
+    // by scroll progress so the comet visits new regions over time.
+    // ─────────────────────────────────────────────────────────────────
+    const PAGE_COMET_GLYPHS = ["✦", "✧", "✶", "✷", "❋", "✺", "⊕", "◯", "△", "▽", "⬡", "✸", "❉", "⚹"];
+
+    function PageComet({ count = 16, color = "var(--amber)", opacity = 0.6 }) {
+      const ref = useRef(null);
+      const trailRef = useRef([]);
+      const startRef = useRef(performance.now() + Math.random() * 1000);
+      const scrollRef = useRef(0);
+      const headPosRef = useRef({ x: 50, y: 50 }); // in vw/vh
+
+      // Catch state — when the user clicks the comet head
+      const [caught, setCaught] = useState(false);
+      const [revealed, setRevealed] = useState(false); // "фаундер" expanded
+      const [anchor, setAnchor] = useState({ x: 50, y: 50 }); // panel anchor in vw/vh
+      const [attempts, setAttempts] = useState(0); // dodge counter
+      const dodgeRef = useRef({ x: 0, y: 0, t: 0 }); // current dodge offset + when it started
+
+      // Dismiss
+      const dismiss = () => { setCaught(false); setRevealed(false); };
+
+      useEffect(() => {
+        if (!caught) return;
+        const onKey = (e) => { if (e.key === "Escape") dismiss(); };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+      }, [caught]);
+
+      useEffect(() => {
+        const onScroll = () => {
+          const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+          scrollRef.current = window.scrollY / max;
+        };
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        let raf;
+        const step = (now) => {
+          if (!caught) {
+            const t = (now - startRef.current) / 1000;
+            const sp = scrollRef.current;
+
+            const oscX =
+              18 * Math.sin(t * 0.13) +
+              8 * Math.sin(t * 0.27 + 1.2) +
+              5 * Math.sin(t * 0.61 + 0.4);
+            const oscY =
+              14 * Math.cos(t * 0.11 + 0.8) +
+              7 * Math.cos(t * 0.31 + 2.1) +
+              4 * Math.sin(t * 0.49);
+
+            const sweepX = 30 * Math.sin(sp * Math.PI * 1.6);
+            const sweepY = -10 + sp * 20;
+
+            // Dodge — when the user tries to catch the comet, it darts away.
+            // The offset decays over ~1.4s so the comet returns to its drift.
+            const dodgeAge = (now - dodgeRef.current.t) / 1000;
+            const dodgeK = dodgeAge < 1.4 ? Math.pow(1 - dodgeAge / 1.4, 2) : 0;
+            const dodgeX = dodgeRef.current.x * dodgeK;
+            const dodgeY = dodgeRef.current.y * dodgeK;
+
+            const x = 50 + oscX + sweepX + dodgeX;
+            const y = 50 + oscY + sweepY + dodgeY;
+
+            headPosRef.current = { x, y };
+            trailRef.current.unshift({ x, y });
+            if (trailRef.current.length > count) trailRef.current.length = count;
+          }
+
+          const el = ref.current;
+          if (el) {
+            const children = el.children;
+            for (let i = 0; i < count; i++) {
+              const node = children[i];
+              if (!node) continue;
+              const p = trailRef.current[i];
+              if (!p) { node.style.opacity = 0; continue; }
+              const k = i / Math.max(1, count - 1);
+              const fade = Math.pow(1 - k, 1.6);
+              const scale = 0.4 + (1 - k) * 0.85;
+              const isHead = i === 0;
+              // When caught, the head pulses gently
+              const caughtScale = caught && isHead
+                ? 1.4 + 0.08 * Math.sin(now / 240)
+                : 1;
+              node.style.transform = `translate(${p.x}vw, ${p.y}vh) translate(-50%, -50%) scale(${scale * caughtScale})`;
+              node.style.opacity = caught && !isHead
+                ? fade * opacity * 0.4 // tail dims when caught
+                : fade * opacity;
+            }
+          }
+          raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+        return () => {
+          cancelAnimationFrame(raf);
+          window.removeEventListener("scroll", onScroll);
+        };
+      }, [count, opacity, caught]);
+
+      const onCatch = (e) => {
+        e.stopPropagation();
+        if (caught) return;
+
+        // First two attempts — the comet escapes. On the third, it lets itself
+        // be caught.
+        if (attempts < 2) {
+          // Dart away from the click in a random direction biased away from
+          // the current cursor position. Magnitude grows with each escape.
+          const cur = headPosRef.current;
+          const cx = (e.clientX / window.innerWidth) * 100;
+          const cy = (e.clientY / window.innerHeight) * 100;
+          let dx = cur.x - cx;
+          let dy = cur.y - cy;
+          const len = Math.sqrt(dx * dx + dy * dy) || 1;
+          dx /= len; dy /= len;
+          // Add a touch of randomness so it doesn't feel mechanical.
+          const jitter = (Math.random() - 0.5) * 0.6;
+          const cs = Math.cos(jitter), sn = Math.sin(jitter);
+          const rx = dx * cs - dy * sn;
+          const ry = dx * sn + dy * cs;
+          const mag = attempts === 0 ? 22 : 32; // 1st: 22vw, 2nd: 32vw
+          dodgeRef.current = { x: rx * mag, y: ry * mag, t: performance.now() };
+          setAttempts(attempts + 1);
+          return;
+        }
+
+        setAnchor({ ...headPosRef.current });
+        setCaught(true);
+      };
+
+      // Panel placement — clamp inside viewport
+      const panelLeft = `clamp(20px, calc(${anchor.x}vw - 160px), calc(100vw - 340px))`;
+      const panelTop = anchor.y > 60
+        ? `clamp(20px, calc(${anchor.y}vh - 220px), calc(100vh - 220px))`
+        : `clamp(20px, calc(${anchor.y}vh + 36px), calc(100vh - 220px))`;
+
+      return (
+        <>
+          {/* Trail layer — non-interactive */}
+          <div
+            ref={ref}
+            className="page-comet-trail"
+            aria-hidden={!caught}
+            style={{
+              position: "fixed",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 4,
+              overflow: "hidden"
+            }}>
+            {Array.from({ length: count }).map((_, i) => {
+              const isHead = i === 0;
+              return (
+                <span key={i} style={{
+                  position: "absolute",
+                  left: 0, top: 0,
+                  willChange: "transform, opacity",
+                  fontSize: isHead ? 30 : Math.max(10, 24 - i * 0.6),
+                  color,
+                  filter: isHead ? `drop-shadow(0 0 18px ${color})` : `drop-shadow(0 0 6px ${color})`,
+                  transition: "opacity 200ms linear"
+                }}>{PAGE_COMET_GLYPHS[i % PAGE_COMET_GLYPHS.length]}</span>
+              );
+            })}
+          </div>
+
+          {/* Hit area for the head — separate so we can give it a generous click target */}
+          {!caught && (
+            <button
+              type="button"
+              onClick={onCatch}
+              aria-label="Поймать комету"
+              style={{
+                position: "fixed",
+                left: 0, top: 0,
+                transform: `translate(${headPosRef.current.x}vw, ${headPosRef.current.y}vh) translate(-50%, -50%)`,
+                width: 64, height: 64,
+                padding: 0,
+                background: "transparent",
+                border: "0",
+                borderRadius: "999px",
+                cursor: "pointer",
+                zIndex: 5,
+                outline: "none"
+              }}
+              ref={(el) => {
+                // Continuously reposition the hit area to track the head.
+                if (!el) return;
+                const tick = () => {
+                  if (!el.isConnected) return;
+                  const { x, y } = headPosRef.current;
+                  el.style.transform = `translate(${x}vw, ${y}vh) translate(-50%, -50%)`;
+                  requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+              }}
+            />
+          )}
+
+          {/* Caught panel */}
+          {caught && (
+            <>
+              {/* Soft scrim */}
+              <div
+                onClick={dismiss}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 5,
+                  background: "color-mix(in oklch, var(--deep) 25%, transparent)",
+                  backdropFilter: "blur(2px)",
+                  WebkitBackdropFilter: "blur(2px)",
+                  animation: "comet-fade 280ms ease both",
+                  cursor: "default"
+                }}
+              />
+              <div
+                role="dialog"
+                aria-label="Связаться с фаундером"
+                style={{
+                  position: "fixed",
+                  left: panelLeft,
+                  top: panelTop,
+                  width: 320,
+                  zIndex: 6,
+                  padding: "26px 28px 24px",
+                  borderRadius: 18,
+                  background: "color-mix(in oklch, var(--soft) 96%, white)",
+                  border: "1px solid color-mix(in oklch, var(--deep) 12%, transparent)",
+                  boxShadow:
+                    "0 1px 0 color-mix(in oklch, var(--amber) 30%, transparent) inset," +
+                    " 0 24px 60px -20px color-mix(in oklch, var(--deep) 35%, transparent)," +
+                    " 0 4px 14px -4px color-mix(in oklch, var(--deep) 18%, transparent)",
+                  animation: "comet-rise 360ms cubic-bezier(.2,.7,.2,1) both",
+                  fontFamily: "var(--font-sans)"
+                }}
+                onClick={(e) => e.stopPropagation()}>
+                {/* Tiny eyebrow */}
+                <div style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                  color: "color-mix(in oklch, var(--deep) 55%, transparent)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 14
+                }}>
+                  <span style={{
+                    color: "var(--amber)",
+                    fontSize: 14,
+                    filter: "drop-shadow(0 0 6px var(--amber))"
+                  }}>✦</span>
+                  Поймали комету
+                </div>
+
+                {/* Headline */}
+                <p style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  fontSize: 26,
+                  lineHeight: 1.18,
+                  margin: 0,
+                  color: "var(--deep)"
+                }}>
+                  Связаться с{" "}
+                  <button
+                    type="button"
+                    onClick={() => setRevealed(true)}
+                    style={{
+                      all: "unset",
+                      cursor: revealed ? "default" : "pointer",
+                      borderBottom: revealed
+                        ? "1px solid transparent"
+                        : "1px dashed color-mix(in oklch, var(--amber) 80%, var(--deep))",
+                      color: revealed ? "var(--amber)" : "var(--deep)",
+                      transition: "color 240ms ease"
+                    }}>
+                    фаундером
+                  </button>
+                </p>
+
+                {/* Reveal area */}
+                <div style={{
+                  marginTop: revealed ? 18 : 12,
+                  maxHeight: revealed ? 200 : 0,
+                  opacity: revealed ? 1 : 0,
+                  overflow: "hidden",
+                  transition: "max-height 360ms cubic-bezier(.2,.7,.2,1), opacity 280ms ease 80ms, margin-top 360ms ease"
+                }}>
+                  <a
+                    className="btn btn-primary"
+                    href="https://t.me/masters_velo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      padding: "14px 18px",
+                      fontSize: 14
+                    }}>
+                    <span className="dot" /> @masters_velo
+                  </a>
+                  <p style={{
+                    margin: "10px 0 0",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10,
+                    letterSpacing: "0.22em",
+                    textTransform: "uppercase",
+                    color: "color-mix(in oklch, var(--deep) 50%, transparent)",
+                    textAlign: "center"
+                  }}>
+                    Tony waits&nbsp;✦✧✦
+                  </p>
+                </div>
+
+                {/* Hint when not yet revealed */}
+                {!revealed && (
+                  <p style={{
+                    margin: "14px 0 0",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10,
+                    letterSpacing: "0.22em",
+                    textTransform: "uppercase",
+                    color: "color-mix(in oklch, var(--deep) 45%, transparent)"
+                  }}>
+                    You are Amazing!
+                  </p>
+                )}
+
+                {/* Close */}
+                <button
+                  type="button"
+                  onClick={dismiss}
+                  aria-label="Закрыть"
+                  style={{
+                    position: "absolute",
+                    top: 10, right: 10,
+                    width: 28, height: 28,
+                    borderRadius: 999,
+                    border: "0",
+                    background: "transparent",
+                    cursor: "pointer",
+                    color: "color-mix(in oklch, var(--deep) 55%, transparent)",
+                    fontSize: 18,
+                    lineHeight: 1
+                  }}>×</button>
+              </div>
+            </>
+          )}
+        </>
+      );
+    }
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "aura": true,
+      "grain": true,
+      "hero": "editorial",
+      "process": "river"
+    }/*EDITMODE-END*/;
+
+    function App() {
+      const [tw, setTweak] = useTweaks(TWEAK_DEFAULTS);
+      const opts = { aura: tw.aura, grain: tw.grain };
+      const heroOpts = { ...opts, noComet: true };
+
+      const HeroByVariant = {
+        editorial: HeroEditorial,
+        sacred: HeroSacred,
+        cinematic: HeroCinematic,
+      };
+      const ProcessByVariant = {
+        river: ProcessRiver,
+        pilgrimage: ProcessPilgrimage,
+        constellation: ProcessConstellation,
+      };
+
+      const Hero = HeroByVariant[tw.hero] || HeroEditorial;
+      const ProcessC = ProcessByVariant[tw.process] || ProcessRiver;
+
+      const isDeepHero = tw.hero === "cinematic";
+
+      return (
+        <>
+          {/* Page-wide sacred comet — fixed, follows scroll */}
+          <PageComet />
+
+          {/* HERO — full viewport */}
+          <section
+            className={`web-section web-hero ${isDeepHero ? "web-deep" : ""}`}
+            data-screen-label="01 Hero">
+            <Hero {...heroOpts} />
+          </section>
+
+          {/* ECOSYSTEM — orbital map (desktop) + pan/zoom (mobile) */}
+          <section className="web-section" data-screen-label="02 Ecosystem" id="ecosystem">
+            <div id="ecosystem-desktop">
+              <EcosystemOrbital {...opts} />
+            </div>
+            <div id="ecosystem-mobile">
+              <EcosystemMobile {...opts} />
+            </div>
+          </section>
+
+          {/* PROCESS — pilgrimage / river / constellation */}
+          <section className="web-section" data-screen-label="03 Process" id="process">
+            <ProcessC {...opts} />
+          </section>
+
+          {/* BENEFITS — что даёт VELΘ */}
+          <section className="web-section" data-screen-label="04 Benefits" id="benefits">
+            <BenefitsEditorial {...opts} />
+          </section>
+
+          {/* INVITATION — main CTA */}
+          <section className="web-section" data-screen-label="05 Invitation" id="invitation">
+            <InvitationFinal {...opts} />
+          </section>
+
+          {/* FAQ */}
+          <section className="web-section" data-screen-label="06 FAQ" id="faq">
+            <FaqEditorial {...opts} />
+          </section>
+
+          {/* FOOTER — minimal editorial */}
+          <footer className="web-section" data-screen-label="07 Footer">
+            <div className={`surface ${tw.grain ? "grain" : ""}`} style={{
+              padding: "60px 60px 48px",
+              borderTop: "1px solid color-mix(in oklch, var(--deep) 10%, transparent)"
+            }}>
+              <div style={{
+                maxWidth: 1200,
+                margin: "0 auto",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 32,
+                alignItems: "flex-end",
+                justifyContent: "space-between"
+              }}>
+                <div>
+                  <img
+                    src="icons/velo-wordmark-extracted.png"
+                    alt="VELΘ"
+                    style={{
+                      height: 32,
+                      width: "auto",
+                      display: "block",
+                      marginBottom: 14,
+                      filter: "brightness(0) saturate(100%) invert(11%) sepia(8%) saturate(632%) hue-rotate(11deg) brightness(94%) contrast(89%)",
+                    }}
+                  />
+                  <p style={{
+                    margin: 0,
+                    maxWidth: "44ch",
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontWeight: 300,
+                    fontSize: 17,
+                    lineHeight: 1.5,
+                    color: "color-mix(in oklch, var(--deep) 65%, transparent)"
+                  }}>
+                    Пространство для тех, кто ведёт практику осознанно.
+                  </p>
+                </div>
+                <div style={{
+                  display: "flex",
+                  gap: 24,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "color-mix(in oklch, var(--deep) 60%, transparent)"
+                }}>
+                  <a href="#ecosystem" style={{ color: "inherit", textDecoration: "none" }}>Экосистема</a>
+                  <a href="#process" style={{ color: "inherit", textDecoration: "none" }}>Процесс</a>
+                  <a href="#invitation" style={{ color: "inherit", textDecoration: "none" }}>Связаться</a>
+                </div>
+              </div>
+              <div style={{
+                maxWidth: 1200,
+                margin: "32px auto 0",
+                paddingTop: 20,
+                borderTop: "1px solid color-mix(in oklch, var(--deep) 8%, transparent)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                color: "color-mix(in oklch, var(--deep) 45%, transparent)",
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 12
+              }}>
+                <span>© VELΘ {new Date().getFullYear()}</span>
+                <span>Made with care</span>
+              </div>
+            </div>
+          </footer>
+
+          {/* TWEAKS */}
+          <TweaksPanel title="Tweaks">
+            <TweakSection title="Атмосфера">
+              <TweakToggle label="Аура (radial glow)" value={tw.aura} onChange={(v) => setTweak('aura', v)} />
+              <TweakToggle label="Зерно (film grain)" value={tw.grain} onChange={(v) => setTweak('grain', v)} />
+            </TweakSection>
+            <TweakSection title="Hero">
+              <TweakRadio
+                value={tw.hero}
+                onChange={(v) => setTweak('hero', v)}
+                options={[
+                  { value: 'editorial', label: 'A · Editorial' },
+                  { value: 'sacred',    label: 'B · Sacred'    },
+                  { value: 'cinematic', label: 'C · Cinematic' },
+                ]}
+              />
+            </TweakSection>
+            <TweakSection title="Process variant">
+              <TweakRadio
+                value={tw.process}
+                onChange={(v) => setTweak('process', v)}
+                options={[
+                  { value: 'river',         label: 'A · Река' },
+                  { value: 'pilgrimage',    label: 'B · Паломнич.' },
+                  { value: 'constellation', label: 'C · Созвездие' },
+                ]}
+              />
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
